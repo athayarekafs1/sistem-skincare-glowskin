@@ -1,0 +1,324 @@
+3.1 STRUKTUR TABEL DATABASE
+
+Sistem Informasi Penjualan GlowSkin menggunakan 7 tabel utama 
+yang saling berelasi. Berikut struktur masing-masing tabel:
+
+─────────────────────────────────────────────────────
+3.1.1 Tabel users
+─────────────────────────────────────────────────────
+Fungsi: Menyimpan data user (admin & sales) untuk login
+
+Kolom          | Tipe          | Keterangan
+───────────────┼───────────────┼──────────────────────
+id_user        | INT (PK)      | Primary key, auto increment
+nama_lengkap   | VARCHAR(100)  | Nama lengkap user
+username       | VARCHAR(50)   | Username untuk login (unik)
+password       | VARCHAR(255)  | Password user
+role           | ENUM          | 'admin' atau 'sales'
+komisi_persen  | DECIMAL(5,2)  | Persentase komisi sales
+created_at     | TIMESTAMP     | Waktu dibuat
+
+─────────────────────────────────────────────────────
+3.1.2 Tabel barang
+─────────────────────────────────────────────────────
+Fungsi: Menyimpan data produk skincare
+
+Kolom          | Tipe          | Keterangan
+───────────────┼───────────────┼──────────────────────
+id_barang      | INT (PK)      | Primary key, auto increment
+nama_barang    | VARCHAR(150)  | Nama produk
+kategori       | VARCHAR(50)   | Kategori (Serum, dll)
+harga          | DECIMAL(12,2) | Harga produk
+stok           | INT           | Jumlah stok tersedia
+gambar         | VARCHAR(255)  | Nama file foto produk
+deskripsi      | TEXT          | Deskripsi produk
+created_at     | TIMESTAMP     | Waktu dibuat
+
+─────────────────────────────────────────────────────
+3.1.3 Tabel transaksi
+─────────────────────────────────────────────────────
+Fungsi: Menyimpan data transaksi penjualan (header)
+
+Kolom          | Tipe          | Keterangan
+───────────────┼───────────────┼──────────────────────
+id_transaksi   | INT (PK)      | Primary key
+kode_transaksi | VARCHAR(50)   | Kode unik (TRX-xxx)
+tanggal        | DATETIME      | Tanggal transaksi
+id_user        | INT (FK)      | Sales yang bertransaksi
+nama_pelanggan | VARCHAR(100)  | Nama pembeli
+metode_bayar   | VARCHAR(50)   | Cash/QRIS/Transfer
+total_bayar    | DECIMAL(12,2) | Total pembayaran
+uang_diterima  | DECIMAL(12,2) | Uang diterima (cash)
+kembalian      | DECIMAL(12,2) | Uang kembalian
+
+─────────────────────────────────────────────────────
+3.1.4 Tabel detail_transaksi
+─────────────────────────────────────────────────────
+Fungsi: Menyimpan detail produk per transaksi
+
+Kolom          | Tipe          | Keterangan
+───────────────┼───────────────┼──────────────────────
+id_detail      | INT (PK)      | Primary key
+id_transaksi   | INT (FK)      | Relasi ke transaksi
+id_barang      | INT (FK)      | Relasi ke barang
+jumlah         | INT           | Jumlah dibeli
+subtotal       | DECIMAL(12,2) | Harga × jumlah
+
+─────────────────────────────────────────────────────
+3.1.5 Tabel komisi
+─────────────────────────────────────────────────────
+Fungsi: Menyimpan data komisi sales
+
+Kolom          | Tipe          | Keterangan
+───────────────┼───────────────┼──────────────────────
+id_komisi      | INT (PK)      | Primary key
+id_transaksi   | INT (FK)      | Relasi ke transaksi
+id_user        | INT (FK)      | Sales penerima komisi
+jumlah_komisi  | DECIMAL(12,2) | Nilai komisi
+status         | ENUM          | 'Pending' atau 'Dibayar'
+tanggal_komisi | DATE          | Tanggal komisi
+
+─────────────────────────────────────────────────────
+3.1.6 Tabel pesanan
+─────────────────────────────────────────────────────
+Fungsi: Menyimpan pesanan dari katalog publik
+
+Kolom          | Tipe          | Keterangan
+───────────────┼───────────────┼──────────────────────
+id_pesanan     | INT (PK)      | Primary key
+id_barang      | INT (FK)      | Relasi ke barang
+nama_pemesan   | VARCHAR(100)  | Nama pelanggan
+no_hp          | VARCHAR(20)   | No HP pelanggan
+alamat         | TEXT          | Alamat pengiriman
+jumlah         | INT           | Jumlah dipesan
+total_bayar    | DECIMAL(12,2) | Total harga
+metode_bayar   | VARCHAR(50)   | Metode pembayaran
+catatan        | TEXT          | Catatan tambahan
+status         | ENUM          | Baru/Dibayar/Selesai
+tanggal        | TIMESTAMP     | Waktu pesan
+
+─────────────────────────────────────────────────────
+3.1.7 Tabel pesanan_detail
+─────────────────────────────────────────────────────
+Fungsi: Menyimpan detail produk per pesanan
+
+Kolom          | Tipe          | Keterangan
+───────────────┼───────────────┼──────────────────────
+id_detail      | INT (PK)      | Primary key
+id_pesanan     | INT (FK)      | Relasi ke pesanan
+id_barang      | INT (FK)      | Relasi ke barang
+jumlah         | INT           | Jumlah dipesan
+subtotal       | DECIMAL(12,2) | Harga × jumlah
+
+3.2 ENTITY RELATIONSHIP DIAGRAM (ERD)
+
+Berikut relasi antar tabel dalam sistem GlowSkin:
+
+┌──────────┐         ┌──────────┐         ┌──────────────┐
+│  users   │         │transaksi │         │detail_transaksi│
+│──────────│         │──────────│         │──────────────│
+│id_user   │◄────────│id_user   │         │id_detail     │
+│nama      │  1   N  │id_transaksi│◄───────│id_transaksi  │
+│username  │         │kode_trx  │  1   N  │id_barang     │
+│password  │         │tanggal   │         │jumlah        │
+│role      │         │total     │         │subtotal      │
+│komisi    │         └──────────┘         └──────────────┘
+└──────────┘              │                       │
+     │                    │                       │
+     │ 1                  │ N                     │ N
+     │                    ▼                       │
+     │              ┌──────────┐                  │
+     │              │  komisi  │                  │
+     │              │──────────│                  │
+     └──────────────│id_user   │                  │
+             1    N │id_komisi │                  │
+                    │id_transaksi                  │
+                    │jumlah    │                  │
+                    │status    │                  │
+                    └──────────┘                  │
+                                                  │
+                                                  ▼
+                                          ┌──────────┐
+                                          │  barang  │
+                                          │──────────│
+                                          │id_barang │
+                                          │nama      │
+                                          │harga     │
+                                          │stok      │
+                                          │gambar    │
+                                          └──────────┘
+                                                  ▲
+                                                  │
+                                                  │ N
+                                          ┌──────────┐
+                                          │ pesanan  │
+                                          │──────────│
+                                          │id_pesanan│
+                                          │id_barang │
+                                          │nama_pes  │
+                                          │no_hp     │
+                                          │alamat    │
+                                          │total     │
+                                          │status    │
+                                          └──────────┘
+                                                  │ 1
+                                                  │
+                                                  ▼ N
+                                          ┌──────────────┐
+                                          │pesanan_detail│
+                                          │──────────────│
+                                          │id_detail     │
+                                          │id_pesanan    │
+                                          │id_barang     │
+                                          │jumlah        │
+                                          │subtotal      │
+                                          └──────────────┘
+
+KETERANGAN RELASI:
+- users (1) ── (N) transaksi     : 1 sales bisa punya banyak transaksi
+- transaksi (1) ── (N) detail_transaksi : 1 transaksi punya banyak detail
+- transaksi (1) ── (1) komisi    : 1 transaksi menghasilkan 1 komisi
+- users (1) ── (N) komisi        : 1 sales bisa punya banyak komisi
+- barang (1) ── (N) detail_transaksi : 1 barang bisa muncul di banyak transaksi
+- pesanan (1) ── (N) pesanan_detail : 1 pesanan punya banyak detail
+- barang (1) ── (N) pesanan_detail : 1 barang bisa dipesan berkali-kali
+
+3.3 FLOWCHART SISTEM
+
+3.3.1 Alur Pelanggan (Katalog Publik)
+
+    [Mulai]
+       │
+       ▼
+    [Buka Katalog Publik]
+       │
+       ▼
+    [Lihat Produk Skincare]
+       │
+       ▼
+    [Pilih Produk]
+       │
+       ├──► [Pesan Langsung] ──┐
+       │                       │
+       └──► [+ Keranjang] ─────┤
+                               │
+       ┌───────────────────────┘
+       │
+       ▼
+    [Isi Form Checkout]
+    (nama, no HP, alamat, metode bayar)
+       │
+       ▼
+    [Klik "Bayar Sekarang"]
+       │
+       ▼
+    [Halaman Pembayaran (QRIS + Timer 8 detik)]
+       │
+       ▼
+    [Pembayaran Sukses]
+       │
+       ▼
+    [Pesanan Tersimpan di Database (status: Dibayar)]
+       │
+       ▼
+    [Selesai - Menunggu Sales Proses]
+
+─────────────────────────────────────────────
+
+3.3.2 Alur Sales
+
+    [Mulai]
+       │
+       ▼
+    [Login (username + password)]
+       │
+       ▼
+    [Dashboard Sales]
+    (lihat total komisi, transaksi, persentase)
+       │
+       ▼
+    [Cek Notifikasi Pesanan Masuk]
+       │
+       ▼
+    [Buka Menu "Pesanan Masuk"]
+       │
+       ▼
+    [Lihat Pesanan Status "Dibayar"]
+       │
+       ▼
+    [Klik "Proses"]
+       │
+       ▼
+    [Halaman Kasir (data pelanggan & produk terisi otomatis)]
+       │
+       ▼
+    [Klik "Simpan Transaksi"]
+       │
+       ▼
+    [Sistem Simpan Transaksi + Hitung Komisi Otomatis]
+       │
+       ▼
+    [Halaman Struk Muncul]
+       │
+       ▼
+    [Selesai]
+
+─────────────────────────────────────────────
+
+3.3.3 Alur Admin
+
+    [Mulai]
+       │
+       ▼
+    [Login (username + password)]
+       │
+       ▼
+    [Dashboard Admin]
+    (grafik penjualan 7 hari, top 5 produk)
+       │
+       ├──► [Kelola Barang]
+       │    ├─ Tambah Barang + Upload Foto
+       │    ├─ Edit Barang
+       │    └─ Hapus Barang
+       │
+       ├──► [Lihat Laporan Penjualan]
+       │    ├─ Filter per Sales
+       │    ├─ Cetak PDF
+       │    └─ Export Excel
+       │
+       ├──► [Kelola Komisi]
+       │    ├─ Lihat komisi semua sales
+       │    ├─ Filter status (Pending/Dibayar)
+       │    └─ Ubah status → Dibayar
+       │
+       └──► [Kelola User]
+            ├─ Tambah sales/admin
+            ├─ Edit user
+            └─ Atur persentase komisi
+       │
+       ▼
+    [Selesai]
+
+─────────────────────────────────────────────
+
+3.3.4 Alur Sistem Komisi Otomatis
+
+    [Sales Input Transaksi di Kasir]
+       │
+       ▼
+    [Sistem Ambil Data Sales (komisi_persen)]
+       │
+       ▼
+    [Hitung: Total Bayar × komisi_persen / 100]
+       │
+       ▼
+    [Simpan ke tabel komisi (status: Pending)]
+       │
+       ▼
+    [Admin Lihat Komisi Pending]
+       │
+       ▼
+    [Admin Klik "Bayar" → Status berubah jadi "Dibayar"]
+       │
+       ▼
+    [Selesai]
